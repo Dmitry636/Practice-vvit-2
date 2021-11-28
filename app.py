@@ -5,7 +5,11 @@ import json
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, render_template,request
+
+
 app = Flask(__name__)
+
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -13,27 +17,26 @@ def index():
 
 @app.route('/', methods=['POST'])
 def index_post():
-    # Read the values from the form
+    # Чтение данных из формы
     original_text = request.form['text']
     target_language = request.form['language']
 
-    # Load the values from .env
+    # Загрузка данных из .env
     key = os.environ['KEY']
     endpoint = os.environ['ENDPOINT']
     location = os.environ['LOCATION']
 
-    # Indicate that we want to translate and the API 
-    # version (3.0) and the target language
+    # Указываем что хотим перевести в API
+    # Версия (3.0) и цельевой язык
     path = '/translate?api-version=3.0'
 
-    # Add the target language parameter
+    # Добавление цельевого параметра языка
     target_language_parameter = '&to=' + target_language
 
-    # Create the full URL
+    # Создание полного URL 
     constructed_url = endpoint + path + target_language_parameter
 
-    # Set up the header information, which includes our
-    # subscription key
+    # Настройка информации заголовка, которая включает мой ключ
     headers = {
         'Ocp-Apim-Subscription-Key': key,
         'Ocp-Apim-Subscription-Region': location,
@@ -41,21 +44,19 @@ def index_post():
         'X-ClientTraceId': str(uuid.uuid4())
     }
 
-    # Create the body of the request with the text to be
-    # translated
+    # Создание тела запроса с текстом, который будет переведен
     body = [{'text': original_text}]
 
-    # Make the call using post
+    # Делаем вызов используя post
     translator_request = requests.post(
         constructed_url, headers=headers, json=body)
 
-    # Retrieve the JSON response
+    # Извлечение JSON отклика
     translator_response = translator_request.json()
 
     translated_text = translator_response[0]['translations'][0]['text']
 
-    # Call render template, passing the translated text,
-    # original text, and target language to the template
+    # Вызов рендера шаблонов, передача переведенного текста, исходного текста и указываемого языка в шаблон
     return render_template(
         'results.html',
         translated_text=translated_text,
